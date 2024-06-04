@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    bookingForm.addEventLis tener('submit', function (e) {
+    bookingForm.addEventListener('submit', function (e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const startTime = startTimeInput.value;
