@@ -73,7 +73,7 @@ $conn->close();
         <link
             href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
             rel="stylesheet">
-            
+
         <style>
             .current-day {
                 background-color: grey;
@@ -127,20 +127,32 @@ $conn->close();
                         <tr>
                             <td><?php echo $hour . ':00'; ?></td>
                             <?php foreach ($days as $day): ?>
-                                <?php $isCurrentDay = ($day == $currentDate->format('Y-m-d'));
-                                if (isset($structuredBookings[$day][$hour])) {
+                                <?php
+                                $isCurrentDay = ($day == $currentDate->format('Y-m-d'));
+                                $skipCell = false;
+
+                                // Check if the current cell should be skipped
+                                if (isset($skipCells[$day][$hour])) {
+                                    $skipCell = true;
+                                }
+
+                                if (isset($structuredBookings[$day][$hour]) && !$skipCell) {
                                     $booking = $structuredBookings[$day][$hour][0];
                                     $startHour = (int) explode(':', $booking['hora_inicio'])[0];
                                     $endHour = (int) explode(':', $booking['hora_finalizacion'])[0];
                                     $rowSpan = $endHour - $startHour;
 
+                                    // Mark subsequent cells to be skipped due to rowspan
+                                    for ($h = $startHour + 1; $h < $endHour; $h++) {
+                                        $skipCells[$day][$h] = true;
+                                    }
+
                                     if ($hour == $startHour) {
-                                        echo "<td class='booked' rowspan=$rowSpan'>";
-                                        echo "{$booking['nombre']}<br>From: {$booking['hora_inicio']}
-                                    <br>To: {$booking['hora_finalizacion']}";
+                                        echo "<td class='booked' rowspan=$rowSpan>";
+                                        echo "{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}";
                                         echo "</td>";
                                     }
-                                } elseif (!isset($structuredBookings[$day][$hour - 1])) {
+                                } elseif (!$skipCell) {
                                     echo "<td>";
                                     echo "<button type='button' class='btn btn-light btn-calendar " .
                                         ($isCurrentDay ? 'current-day' : '') . "' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
@@ -215,7 +227,7 @@ $conn->close();
                         type: 'POST',
                         data: formData,
                         success: function (response) {
-                            alert(response); 
+                            alert(response);
                             $('#exampleModal').modal('hide');
                             location.reload(); // Reload to see the updated bookings
                         },
