@@ -125,6 +125,18 @@ $conn->close();
                 padding: 5px 15px;
                 border-radius: 7px;
             }
+
+            .days {
+                font-weight: 800;
+                font-size: 1.1em;
+                text-align: center;
+            }
+
+            .hours {
+                font-weight: 800;
+                font-size: 1.2em;
+                text-align: left;
+            }
         </style>
     </head>
 
@@ -144,9 +156,9 @@ $conn->close();
             <table class="table table-bordered">
                 <thead class="thead-light">
                     <tr>
-                        <th>Hora</th>
+                        <th class="hours">Hora</th>
                         <?php foreach ($days as $day): ?>
-                            <th>
+                            <th class="days">
                                 <?php echo $daysOfWeek[(new DateTime($day))->format('N') - 1] . '<br>' . (new DateTime($day))->format('d/m/Y'); ?>
                             </th>
                         <?php endforeach; ?>
@@ -155,7 +167,7 @@ $conn->close();
                 <tbody>
                     <?php foreach ($hours as $hour): ?>
                         <tr>
-                            <td><?php echo $hour . ':00'; ?></td>
+                            <td class="hours"><?php echo $hour . ':00'; ?></td>
                             <?php foreach ($days as $day): ?>
                                 <?php
                                 $isCurrentDay = ($day == $currentDate->format('Y-m-d'));
@@ -183,9 +195,10 @@ $conn->close();
                                         echo "</td>";
                                     }
                                 } elseif (!$skipCell) {
-                                    echo "<td>";
-                                    echo "<button type='button' class='btn btn-light btn-calendar " .
-                                        ($isCurrentDay ? 'current-day' : '') . "' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
+                                    echo "<td class='" .
+                                        ($isCurrentDay ? 'current-day' : '') . "'>";
+                                    echo "<button type='button' class='btn btn-light btn-calendar' 
+                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
                                     echo "</td>";
                                 }
                                 ?>
