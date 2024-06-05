@@ -133,6 +133,7 @@ $conn->close();
                             <?php foreach ($days as $day): ?>
                                 <?php
                                 $isCurrentDay = ($day == (new DateTime())->format('Y-m-d'));
+                                $isPastDay = (new DateTime($day)) < (new DateTime())->setTime(0, 0, 0);
                                 $skipCell = false;
 
                                 // Check if the current cell should be skipped
@@ -152,7 +153,8 @@ $conn->close();
                                     }
 
                                     if ($hour == $startHour) {
-                                        echo "<td class='booked' rowspan='$rowSpan'
+                                        $eventClass = $isPastDay ? 'past-day-event' : '';
+                                        echo "<td class='booked $eventClass' rowspan='$rowSpan'
                                             style='background-color: {$booking['color']};' 
                                             data-toggle='modal' data-target='#editBookingModal'
                                             data-id='{$booking['id_ticket']}' data-name='{$booking['nombre']}' 
@@ -160,16 +162,19 @@ $conn->close();
                                             data-date='{$booking['reserva_reservada']}'>";
                                         echo "<span class='booking-info'>{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}</span>";
                                         echo "</td>";
-
                                     }
                                 } elseif (!$skipCell) {
-                                    echo "<td class='" . ($isCurrentDay ? 'current-day' : '') . "'>";
-                                    echo "<button type='button' class='btn btn-light btn-calendar' 
-                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
+                                    $cellClass = $isCurrentDay ? 'current-day' : ($isPastDay ? 'past-day' : '');
+                                    echo "<td class='$cellClass'>";
+                                    if (!$isPastDay) {
+                                        echo "<button type='button' class='btn btn-light btn-calendar' 
+                                        ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
+                                    }
                                     echo "</td>";
                                 }
                                 ?>
                             <?php endforeach; ?>
+
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

@@ -53,3 +53,13 @@ h2 {
   border-radius: 12px;
   cursor: pointer;
 }
+.past-day {
+  background-color: #f0f0f0;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+.past-day-event {
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
