@@ -2,33 +2,33 @@
 session_start();
 include 'includes/connection.php';
 
-// Définir la semaine sélectionnée
+// Set the selected week
 if (isset($_GET['week'])) {
     $weekOffset = (int) $_GET['week'];
 } else {
     $weekOffset = 0;
 }
 
-// Date actuelle
+// Current date
 $currentDate = new DateTime();
+$currentDate->setTime(0, 0, 0);
 $currentDate->modify("$weekOffset week");
 
-// Début et fin de la semaine actuelle
+// Start and end of the current week
 $startDate = clone $currentDate;
 $endDate = clone $currentDate;
-$startDate->modify('-' . $startDate->format('N') . ' days +1 day'); // Lundi de la semaine
-$endDate->modify('+' . (7 - $endDate->format('N')) . ' days'); // Dimanche de la semaine
+$startDate->modify('-' . $startDate->format('N') . ' days +1 day'); // Monday of the week
+$endDate->modify('+' . (7 - $endDate->format('N')) . ' days'); // Sunday of the week
 
-// Tableau des heures de 8h à 17h
+// Table of hours from 8 a.m. to 5 p.m.
 $hours = range(8, 16);
 $daysOfWeek = array('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes');
 
-// Générer les jours à afficher, en excluant les samedis et dimanches
 $days = [];
 $current = clone $startDate;
 while ($current <= $endDate) {
-    $dayOfWeek = $current->format('N'); // 1 (pour Lundi) à 7 (pour Dimanche)
-    if ($dayOfWeek < 6) { // Exclure les samedis (6) et dimanches (7)
+    $dayOfWeek = $current->format('N'); // 1 (for Monday) to 7 (for Sunday)
+    if ($dayOfWeek < 6) { // Exclude Saturdays (6) and Sundays (7)
         $days[] = $current->format('Y-m-d');
     }
     $current->modify('+1 day');
@@ -44,7 +44,21 @@ $stmt->bind_param('ss', $startDateString, $endDateString);
 $stmt->execute();
 $result = $stmt->get_result();
 
+function generateRandomColor()
+{
+    $excludedColors = ['#ffffff', '#000000', '#808080'];
+    $hex = '#';
+    $characters = '0123456789ABCDEF';
+    do {
+        for ($i = 0; $i < 3; $i++) {
+            $hex .= $characters[rand(2, 15)];
+        }
+    } while (in_array($hex, $excludedColors));
+    return $hex;
+}
+
 while ($row = $result->fetch_assoc()) {
+    $row['color'] = generateRandomColor();
     $bookings[] = $row;
 }
 
@@ -85,59 +99,7 @@ $conn->close();
         <link
             href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
             rel="stylesheet">
-        <style>
-            .current-day {
-                background-color: grey;
-            }
-
-            .btn-calendar {
-                width: 100%;
-                height: 100%;
-            }
-
-            .booked {
-                background-color: red;
-                color: white;
-                border-radius: 5px;
-                padding: 4px 8px;
-            }
-
-            h1 {
-                font-weight: 500;
-            }
-
-            h2 {
-                font-family: "Lato", sans-serif;
-                font-size: 2.5em;
-                font-weight: 700;
-            }
-
-            .lbrobtn {
-                font-size: 1.1em;
-                font-weight: 500;
-                text-transform: uppercase;
-                padding: 5px 50px;
-                border-radius: 7px;
-            }
-
-            .weekbtn {
-                text-transform: uppercase;
-                padding: 5px 15px;
-                border-radius: 7px;
-            }
-
-            .days {
-                font-weight: 800;
-                font-size: 1.1em;
-                text-align: center;
-            }
-
-            .hours {
-                font-weight: 800;
-                font-size: 1.2em;
-                text-align: left;
-            }
-        </style>
+        <link rel="stylesheet" href="style.css">
     </head>
 
     <body>
@@ -147,7 +109,7 @@ $conn->close();
             <h2 class="my-4"><span style="color:#94c564">Central</span><span style="color:#dc4021">Uniformes</span></h2>
         </nav>
         <div class="container">
-            <div class="d-flex justify-content-between mb-3">
+            <div class="d-flex justify-content-between mb3">
                 <a href="?week=<?php echo $weekOffset - 1; ?>" class="weekbtn btn btn-success"><i
                         class="px-1 fa-solid fa-arrow-left"></i>Semana Pasada</a>
                 <a href="?week=<?php echo $weekOffset + 1; ?>" class="weekbtn btn btn-success">Próxima Semana<i
@@ -164,50 +126,57 @@ $conn->close();
                         <?php endforeach; ?>
                     </tr>
                 </thead>
-                <?php foreach ($hours as $hour): ?>
-                    <tr>
-                        <td class="hours"><?php echo $hour . ':00'; ?></td>
-                        <?php foreach ($days as $day): ?>
-                            <?php
-                            $isCurrentDay = ($day == (new DateTime())->format('Y-m-d'));
-                            $skipCell = false;
+                <tbody>
+                    <?php foreach ($hours as $hour): ?>
+                        <tr>
+                            <td class="hours"><?php echo $hour . ':00'; ?></td>
+                            <?php foreach ($days as $day): ?>
+                                <?php
+                                $isCurrentDay = ($day == (new DateTime())->format('Y-m-d'));
+                                $skipCell = false;
 
-                            // Check if the current cell should be skipped
-                            if (isset($skipCells[$day][$hour])) {
-                                $skipCell = true;
-                            }
-
-                            if (isset($structuredBookings[$day][$hour]) && !$skipCell) {
-                                $booking = $structuredBookings[$day][$hour][0];
-                                $startHour = (int) explode(':', $booking['hora_inicio'])[0];
-                                $endHour = (int) explode(':', $booking['hora_finalizacion'])[0];
-                                $rowSpan = $endHour - $startHour;
-
-                                // Mark subsequent cells to be skipped due to rowspan
-                                for ($h = $startHour + 1; $h < $endHour; $h++) {
-                                    $skipCells[$day][$h] = true;
+                                // Check if the current cell should be skipped
+                                if (isset($skipCells[$day][$hour])) {
+                                    $skipCell = true;
                                 }
 
-                                if ($hour == $startHour) {
-                                    echo "<td class='booked' rowspan=$rowSpan>";
-                                    echo "{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}";
+                                if (isset($structuredBookings[$day][$hour]) && !$skipCell) {
+                                    $booking = $structuredBookings[$day][$hour][0];
+                                    $startHour = (int) explode(':', $booking['hora_inicio'])[0];
+                                    $endHour = (int) explode(':', $booking['hora_finalizacion'])[0];
+                                    $rowSpan = $endHour - $startHour;
+
+                                    // Mark subsequent cells to be skipped due to rowspan
+                                    for ($h = $startHour + 1; $h < $endHour; $h++) {
+                                        $skipCells[$day][$h] = true;
+                                    }
+
+                                    if ($hour == $startHour) {
+                                        echo "<td class='booked' rowspan='$rowSpan'
+                                            style='background-color: {$booking['color']};' 
+                                            data-toggle='modal' data-target='#editBookingModal'
+                                            data-id='{$booking['id_ticket']}' data-name='{$booking['nombre']}' 
+                                            data-start='{$booking['hora_inicio']}' data-end='{$booking['hora_finalizacion']}' 
+                                            data-date='{$booking['reserva_reservada']}'>";
+                                        echo "<span class='booking-info'>{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}</span>";
+                                        echo "</td>";
+
+                                    }
+                                } elseif (!$skipCell) {
+                                    echo "<td class='" . ($isCurrentDay ? 'current-day' : '') . "'>";
+                                    echo "<button type='button' class='btn btn-light btn-calendar' 
+                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
                                     echo "</td>";
                                 }
-                            } elseif (!$skipCell) {
-                                echo "<td class='" . ($isCurrentDay ? 'current-day' : '') . "'>";
-                                echo "<button type='button' class='btn btn-light btn-calendar' 
-                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
-                                echo "</td>";
-                            }
-                            ?>
-                        <?php endforeach; ?>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
+                                ?>
+                            <?php endforeach; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
             </table>
         </div>
 
-        <!-- Modal -->
+        <!-- Add Booking Modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -231,17 +200,61 @@ $conn->close();
                                 <label for="event-hour">Hora de inicio:</label>
                                 <input type="text" class="form-control" id="event-hour" name="event-hour" readonly>
                             </div>
-
-
                             <div class="form-group">
                                 <label for="endTime">Hora de finalización:</label>
-                                <select class="form-control" id="endTime" name="endTime" required>
+                                <select class="form-control" id="endTime" name="endTime" required></select>
+                            </div>
+                            <button type="submit" class="lbrobtn btn btn-success">Libro</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Booking Modal -->
+        <div class="modal fade" id="editBookingModal" tabindex="-1" aria-labelledby="editBookingModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editBookingModalLabel">Editar reserva</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editEventForm">
+                            <input type="hidden" id="edit-event-id" name="event-id">
+                            <div class="form-group">
+                                <label for="edit-event-title">Nombre</label>
+                                <input type="text" class="form-control" id="edit-event-title" name="event-title"
+                                    required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-event-date">Fecha:</label>
+                                <select class="form-control" id="edit-event-date" name="event-date" required>
+                                    <?php foreach ($days as $day): ?>
+                                        <?php
+                                        $dayDateTime = new DateTime($day);
+                                        if ($dayDateTime >= $currentDate) { ?>
+                                            <option value="<?php echo $day; ?>" <?php echo ($day == $currentDate->format('Y-m-d')) ? 'selected' : ''; ?>>
+                                                <?php echo $daysOfWeek[$dayDateTime->format('N') - 1] . ' ' . $dayDateTime->format('d/m/Y'); ?>
+                                            </option>
+                                        <?php } ?>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
-
-
-
-                            <button type="submit" class="lbrobtn btn btn-success">Libro</button>
+                            <div class="form-group">
+                                <label for="edit-event-start">Hora de inicio:</label>
+                                <select class="form-control" id="edit-event-start" name="event-start" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-endTime">Hora de finalización:</label>
+                                <select class="form-control" id="edit-endTime" name="endTime" required></select>
+                            </div>
+                            <button type="submit" class="librobtn btn btn-success">Guardar cambios</button>
+                            <button type="button" class="librobtn btn btn-danger"><i
+                                    class="fa-solid fa-trash"></i></button>
                         </form>
                     </div>
                 </div>
@@ -253,6 +266,7 @@ $conn->close();
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script>
             $(document).ready(function () {
+                // Handling Add Booking Modal
                 $('#exampleModal').on('show.bs.modal', function (event) {
                     var button = $(event.relatedTarget);
                     var day = button.data('day');
@@ -263,6 +277,7 @@ $conn->close();
                     modal.find('#event-date').val(day);
                     modal.find('#event-hour').val(formattedHour);
 
+                    const startTimeSelect = document.getElementById('event-hour');
                     const endTimeSelect = document.getElementById('endTime');
                     endTimeSelect.innerHTML = ''; // Clear existing options
 
@@ -273,6 +288,20 @@ $conn->close();
                         option.value = timeString;
                         option.text = timeString;
                         endTimeSelect.add(option);
+                    });
+
+                    startTimeSelect.addEventListener('change', function () {
+                        var selectedStartTime = parseInt(this.value.split(':')[0]);
+                        endTimeSelect.innerHTML = ''; // Clear existing options
+
+                        var availableEndTimes = getAvailableEndTimes(day, selectedStartTime);
+                        availableEndTimes.forEach(function (endHour) {
+                            const timeString = `${endHour.toString().padStart(2, '0')}:00`;
+                            const option = document.createElement('option');
+                            option.value = timeString;
+                            option.text = timeString;
+                            endTimeSelect.add(option);
+                        });
                     });
 
                     if (endTimeSelect.options.length === 0) {
@@ -294,19 +323,122 @@ $conn->close();
                         success: function (response) {
                             alert(response);
                             $('#exampleModal').modal('hide');
-                            location.reload(); // Reload to see the updated bookings
+                            location.reload();
                         },
                         error: function (xhr, status, error) {
                             alert('Error: ' + xhr.responseText);
                         }
                     });
                 });
+
+                $('#editBookingModal').on('show.bs.modal', function (event) {
+                    var button = $(event.relatedTarget);
+                    var id = button.data('id');
+                    var name = button.data('name');
+                    var date = button.data('date');
+                    var start = button.data('start');
+                    var end = button.data('end');
+
+                    var modal = $(this);
+                    modal.find('#edit-event-id').val(id);
+                    modal.find('#edit-event-title').val(name);
+                    modal.find('#edit-event-date').val(date);
+
+                    populateStartTimes(date, start, end);
+
+                    modal.find('#edit-event-date').on('change', function () {
+                        var selectedDate = $(this).val();
+                        populateStartTimes(selectedDate, start, end);
+                    });
+
+                    function populateStartTimes(date, start, end) {
+                        const startTimeSelect = modal.find('#edit-event-start')[0];
+                        const endTimeSelect = modal.find('#edit-endTime')[0];
+
+                        startTimeSelect.innerHTML = '';
+                        endTimeSelect.innerHTML = '';
+
+                        var availableStartTimes = getAvailableStartTimes(date);
+                        availableStartTimes.forEach(function (startHour) {
+                            const timeString = `${startHour.toString().padStart(2, '0')}:00`;
+                            const option = document.createElement('option');
+                            option.value = timeString;
+                            option.text = timeString;
+                            startTimeSelect.add(option);
+                        });
+
+                        if (start) {
+                            startTimeSelect.value = start;
+                        }
+
+                        populateEndTimes(date, start ? parseInt(start.split(':')[0]) : availableStartTimes[0]);
+
+                        startTimeSelect.addEventListener('change', function () {
+                            var selectedStartTime = parseInt(this.value.split(':')[0]);
+                            populateEndTimes(date, selectedStartTime);
+                        });
+
+                        if (endTimeSelect.options.length === 0) {
+                            modal.find('button[type="submit"]').prop('disabled', true);
+                        } else {
+                            modal.find('button[type="submit"]').prop('disabled', false);
+                        }
+                    }
+
+                    function populateEndTimes(date, startHour) {
+                        const endTimeSelect = modal.find('#edit-endTime')[0];
+                        endTimeSelect.innerHTML = '';
+
+                        var availableEndTimes = getAvailableEndTimes(date, startHour);
+                        availableEndTimes.forEach(function (endHour) {
+                            const timeString = `${endHour.toString().padStart(2, '0')}:00`;
+                            const option = document.createElement('option');
+                            option.value = timeString;
+                            option.text = timeString;
+                            endTimeSelect.add(option);
+                        });
+
+                        if (end) {
+                            endTimeSelect.value = end;
+                        }
+                    }
+
+                    $('#editEventForm').on('submit', function (event) {
+                        event.preventDefault();
+
+                        var formData = $(this).serialize();
+
+                        $.ajax({
+                            url: 'includes/edit_booking.php',
+                            type: 'POST',
+                            data: formData,
+                            success: function (response) {
+                                alert(response);
+                                $('#editBookingModal').modal('hide');
+                                location.reload();
+                            },
+                            error: function (xhr, status, error) {
+                                alert('Error: ' + xhr.responseText);
+                            }
+                        });
+                    });
+                });
             });
 
-            function getAvailableEndTimes(day, startHour) {
+            function getAvailableStartTimes(date) {
+                var startTimes = [];
+                for (let hour = 8; hour <= 16; hour++) {
+                    if (!isBooked(date, hour)) {
+                        startTimes.push(hour);
+                    }
+                }
+                return startTimes;
+            }
+
+            function getAvailableEndTimes(date, startHour) {
                 var endTimes = [];
                 for (let hour = startHour + 1; hour <= 17; hour++) {
-                    if (!isBooked(day, hour)) {
+                    if (!isBooked(date, hour)) {
                         endTimes.push(hour);
                     } else {
                         endTimes.push(hour);
@@ -316,10 +448,12 @@ $conn->close();
                 return endTimes;
             }
 
-            function isBooked(day, hour) {
+            function isBooked(date, hour) {
                 var bookings = <?php echo json_encode($structuredBookings); ?>;
-                return bookings[day] && bookings[day][hour];
+                return bookings[date] && bookings[date][hour];
             }
+
+
         </script>
     </body>
 
