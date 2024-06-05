@@ -102,74 +102,7 @@ $conn->close();
             href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
             rel="stylesheet">
         <link rel="stylesheet" href="style.css">
-        <style>
-            .current-day {
-                background-color: white;
-                border: 2px red solid;
-            }
 
-            .bookBtn {
-                padding: 20px;
-                background-color: #f8f9fa;
-                border: none;
-            }
-
-            .bookBtn:hover {
-                background-color: #dfe0e1;
-            }
-
-            .booked {
-                color: white;
-                font-size: 1.25em;
-                font-weight: 600;
-                text-shadow: #000 1px 0 5px;
-                border-radius: 12px;
-                cursor: pointer;
-            }
-
-            .booked:hover {
-                transform: scale(1.05);
-                transition: 0.3s ease-in-out;
-            }
-
-            .librobtn {
-                font-size: 1.1em;
-                font-weight: 500;
-                text-transform: uppercase;
-                padding: 5px 12px;
-                border-radius: 7px;
-            }
-
-            .removebtn {
-                border-radius: 7px;
-                width: 40px;
-            }
-
-            .past-day {
-                background-color: #f0f0f0;
-                pointer-events: none;
-                cursor: not-allowed;
-                opacity: 0.5;
-            }
-
-            .past-day-event {
-                pointer-events: none;
-                cursor: not-allowed;
-                opacity: 0.45;
-                border-radius: 15px;
-            }
-
-            .current-time-line {
-                position: absolute;
-                width: 100%;
-                border-top: 2px solid red;
-                z-index: 10;
-            }
-
-            .table {
-                position: relative;
-            }
-        </style>
     </head>
 
     <body>

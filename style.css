@@ -1,3 +1,43 @@
+.bookBtn {
+  padding: 20px;
+  background-color: #f8f9fa;
+  border: none;
+}
+
+.bookBtn:hover {
+  background-color: #dfe0e1;
+}
+
+.booked {
+  color: white;
+  font-size: 1.25em;
+  font-weight: 600;
+  text-shadow: #000 1px 0 5px;
+  border-radius: 12px;
+  cursor: pointer;
+}
+
+.booked:hover {
+  transform: scale(1.05);
+  transition: 0.3s ease-in-out;
+}
+
+.removebtn {
+  border-radius: 7px;
+  width: 40px;
+}
+
+.current-time-line {
+  position: absolute;
+  width: 100%;
+  border-top: 2px solid red;
+  z-index: 10;
+}
+
+.table {
+  position: relative;
+}
+
 .current-day {
   background-color: #ccc;
   border: 2px red solid;
@@ -45,14 +85,7 @@ h2 {
   text-align: left;
 }
 
-.booked {
-  color: white;
-  font-size: 1.25em;
-  font-weight: 600;
-  text-shadow: #000 1px 0 5px;
-  border-radius: 12px;
-  cursor: pointer;
-}
+
 .past-day {
   background-color: #f0f0f0;
   pointer-events: none;
@@ -62,4 +95,3 @@ h2 {
   pointer-events: none;
   cursor: not-allowed;
 }
-
