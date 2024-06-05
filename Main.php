@@ -164,48 +164,46 @@ $conn->close();
                         <?php endforeach; ?>
                     </tr>
                 </thead>
-                <tbody>
-                    <?php foreach ($hours as $hour): ?>
-                        <tr>
-                            <td class="hours"><?php echo $hour . ':00'; ?></td>
-                            <?php foreach ($days as $day): ?>
-                                <?php
-                                $isCurrentDay = ($day == $currentDate->format('Y-m-d'));
-                                $skipCell = false;
+                <?php foreach ($hours as $hour): ?>
+                    <tr>
+                        <td class="hours"><?php echo $hour . ':00'; ?></td>
+                        <?php foreach ($days as $day): ?>
+                            <?php
+                            $isCurrentDay = ($day == (new DateTime())->format('Y-m-d'));
+                            $skipCell = false;
 
-                                // Check if the current cell should be skipped
-                                if (isset($skipCells[$day][$hour])) {
-                                    $skipCell = true;
+                            // Check if the current cell should be skipped
+                            if (isset($skipCells[$day][$hour])) {
+                                $skipCell = true;
+                            }
+
+                            if (isset($structuredBookings[$day][$hour]) && !$skipCell) {
+                                $booking = $structuredBookings[$day][$hour][0];
+                                $startHour = (int) explode(':', $booking['hora_inicio'])[0];
+                                $endHour = (int) explode(':', $booking['hora_finalizacion'])[0];
+                                $rowSpan = $endHour - $startHour;
+
+                                // Mark subsequent cells to be skipped due to rowspan
+                                for ($h = $startHour + 1; $h < $endHour; $h++) {
+                                    $skipCells[$day][$h] = true;
                                 }
 
-                                if (isset($structuredBookings[$day][$hour]) && !$skipCell) {
-                                    $booking = $structuredBookings[$day][$hour][0];
-                                    $startHour = (int) explode(':', $booking['hora_inicio'])[0];
-                                    $endHour = (int) explode(':', $booking['hora_finalizacion'])[0];
-                                    $rowSpan = $endHour - $startHour;
-
-                                    // Mark subsequent cells to be skipped due to rowspan
-                                    for ($h = $startHour + 1; $h < $endHour; $h++) {
-                                        $skipCells[$day][$h] = true;
-                                    }
-
-                                    if ($hour == $startHour) {
-                                        echo "<td class='booked' rowspan=$rowSpan>";
-                                        echo "{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}";
-                                        echo "</td>";
-                                    }
-                                } elseif (!$skipCell) {
-                                    echo "<td class='" .
-                                        ($isCurrentDay ? 'current-day' : '') . "'>";
-                                    echo "<button type='button' class='btn btn-light btn-calendar' 
-                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
+                                if ($hour == $startHour) {
+                                    echo "<td class='booked' rowspan=$rowSpan>";
+                                    echo "{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}";
                                     echo "</td>";
                                 }
-                                ?>
-                            <?php endforeach; ?>
-                        </tr>
-                    <?php endforeach; ?>
-                </tbody>
+                            } elseif (!$skipCell) {
+                                echo "<td class='" . ($isCurrentDay ? 'current-day' : '') . "'>";
+                                echo "<button type='button' class='btn btn-light btn-calendar' 
+                                    ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
+                                echo "</td>";
+                            }
+                            ?>
+                        <?php endforeach; ?>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
             </table>
         </div>
 
