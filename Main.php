@@ -2,25 +2,26 @@
 session_start();
 include 'includes/connection.php';
 
-// Set the selected week
+// Définir la semaine sélectionnée
 if (isset($_GET['week'])) {
     $weekOffset = (int) $_GET['week'];
 } else {
     $weekOffset = 0;
 }
 
-// Current date
+// Date actuelle
 $currentDate = new DateTime();
 $currentDate->setTime(0, 0, 0);
 $currentDate->modify("$weekOffset week");
 
-// Start and end of the current week
+
+// Début et fin de la semaine actuelle
 $startDate = clone $currentDate;
 $endDate = clone $currentDate;
-$startDate->modify('-' . $startDate->format('N') . ' days +1 day'); // Monday of the week
-$endDate->modify('+' . (7 - $endDate->format('N')) . ' days'); // Sunday of the week
+$startDate->modify('-' . $startDate->format('N') . ' days +1 day'); // Lundi de la semaine
+$endDate->modify('+' . (7 - $endDate->format('N')) . ' days'); // Dimanche de la semaine
 
-// Table of hours from 8 a.m. to 5 p.m.
+// Tableau des heures de 8h à 17h
 $hours = range(8, 16);
 $daysOfWeek = array('Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes');
 
@@ -43,6 +44,7 @@ $endDateString = $endDate->format('Y-m-d');
 $stmt->bind_param('ss', $startDateString, $endDateString);
 $stmt->execute();
 $result = $stmt->get_result();
+
 
 function generateRandomColor()
 {
@@ -100,6 +102,74 @@ $conn->close();
             href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap"
             rel="stylesheet">
         <link rel="stylesheet" href="style.css">
+        <style>
+            .current-day {
+                background-color: white;
+                border: 2px red solid;
+            }
+
+            .bookBtn {
+                padding: 20px;
+                background-color: #f8f9fa;
+                border: none;
+            }
+
+            .bookBtn:hover {
+                background-color: #dfe0e1;
+            }
+
+            .booked {
+                color: white;
+                font-size: 1.25em;
+                font-weight: 600;
+                text-shadow: #000 1px 0 5px;
+                border-radius: 12px;
+                cursor: pointer;
+            }
+
+            .booked:hover {
+                transform: scale(1.05);
+                transition: 0.3s ease-in-out;
+            }
+
+            .librobtn {
+                font-size: 1.1em;
+                font-weight: 500;
+                text-transform: uppercase;
+                padding: 5px 12px;
+                border-radius: 7px;
+            }
+
+            .removebtn {
+                border-radius: 7px;
+                width: 40px;
+            }
+
+            .past-day {
+                background-color: #f0f0f0;
+                pointer-events: none;
+                cursor: not-allowed;
+                opacity: 0.5;
+            }
+
+            .past-day-event {
+                pointer-events: none;
+                cursor: not-allowed;
+                opacity: 0.45;
+                border-radius: 15px;
+            }
+
+            .current-time-line {
+                position: absolute;
+                width: 100%;
+                border-top: 2px solid red;
+                z-index: 10;
+            }
+
+            .table {
+                position: relative;
+            }
+        </style>
     </head>
 
     <body>
@@ -162,23 +232,24 @@ $conn->close();
                                             data-date='{$booking['reserva_reservada']}'>";
                                         echo "<span class='booking-info'>{$booking['nombre']}<br>{$booking['hora_inicio']} - {$booking['hora_finalizacion']}</span>";
                                         echo "</td>";
+
                                     }
                                 } elseif (!$skipCell) {
                                     $cellClass = $isCurrentDay ? 'current-day' : ($isPastDay ? 'past-day' : '');
                                     echo "<td class='$cellClass'>";
                                     if (!$isPastDay) {
-                                        echo "<button type='button' class='btn btn-light btn-calendar' 
+                                        echo "<button type='button' class='bookBtn btn btn-calendar' 
                                         ' data-toggle='modal' data-target='#exampleModal' data-day='$day' data-hour='$hour'></button>";
                                     }
                                     echo "</td>";
                                 }
                                 ?>
                             <?php endforeach; ?>
-
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
             </table>
+            <div class="current-time-line" id="current-time-line"></div>
         </div>
 
         <!-- Add Booking Modal -->
@@ -257,9 +328,10 @@ $conn->close();
                                 <label for="edit-endTime">Hora de finalización:</label>
                                 <select class="form-control" id="edit-endTime" name="endTime" required></select>
                             </div>
-                            <button type="submit" class="librobtn btn btn-success">Guardar cambios</button>
-                            <button type="button" class="librobtn btn btn-danger"><i
-                                    class="fa-solid fa-trash"></i></button>
+                            <button type="submit" class="librobtn btn btn-success" style="margin-right: 45%;">Guardar
+                                cambios</button>
+                            <button type="button" class="removebtn btn btn-danger"><i class="fa-solid fa-trash"
+                                    id="deleteBookingButton"></i></button>
                         </form>
                     </div>
                 </div>
@@ -271,7 +343,28 @@ $conn->close();
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script>
             $(document).ready(function () {
-                // Handling Add Booking Modal
+                function updateCurrentTimeLine() {
+                    const now = new Date();
+                    const currentHour = now.getHours();
+                    const currentMinute = now.getMinutes();
+                    const totalMinutes = (currentHour - 8) * 60 + currentMinute; // Assuming calendar starts at 8:00
+
+                    const table = document.querySelector('.table');
+                    const hourCell = table.querySelector('td.hours');
+                    const cellHeight = hourCell ? hourCell.offsetHeight : 50; // Default to 50px if not found
+                    const topPosition = totalMinutes * (cellHeight / 60);
+
+                    const currentTimeLine = document.getElementById('current-time-line');
+                    currentTimeLine.style.top = `${topPosition}px`;
+                }
+
+                function initializeCurrentTimeLine() {
+                    updateCurrentTimeLine();
+                    setInterval(updateCurrentTimeLine, 60000); // Update every minute
+                }
+
+                document.addEventListener('DOMContentLoaded', initializeCurrentTimeLine);
+                // Add Booking Modal
                 $('#exampleModal').on('show.bs.modal', function (event) {
                     var button = $(event.relatedTarget);
                     var day = button.data('day');
@@ -322,7 +415,7 @@ $conn->close();
                     var formData = $(this).serialize();
 
                     $.ajax({
-                        url: 'insert_booking.php',
+                        url: 'includes/insert_booking.php',
                         type: 'POST',
                         data: formData,
                         success: function (response) {
@@ -392,7 +485,7 @@ $conn->close();
 
                     function populateEndTimes(date, startHour) {
                         const endTimeSelect = modal.find('#edit-endTime')[0];
-                        endTimeSelect.innerHTML = '';
+                        endTimeSelect.innerHTML = ''; // Clear existing options
 
                         var availableEndTimes = getAvailableEndTimes(date, startHour);
                         availableEndTimes.forEach(function (endHour) {
@@ -432,7 +525,7 @@ $conn->close();
 
             function getAvailableStartTimes(date) {
                 var startTimes = [];
-                for (let hour = 8; hour <= 16; hour++) {
+                for (let hour = 8; hour <= 16; hour++) { // Available start times from 08:00 to 16:00
                     if (!isBooked(date, hour)) {
                         startTimes.push(hour);
                     }
@@ -458,6 +551,30 @@ $conn->close();
                 return bookings[date] && bookings[date][hour];
             }
 
+
+            $('#deleteBookingButton').click(function () {
+                var bookingId = $('#edit-event-id').val();
+
+                if (confirm('¿Estás seguro de que deseas eliminar esta reserva?')) {
+                    $.ajax({
+                        url: 'includes/delete_booking.php',
+                        type: 'POST',
+                        data: { id: bookingId },
+                        success: function (response) {
+                            if (response === 'success') {
+                                //alert('Reserva eliminada correctamente.');
+                                $('#editBookingModal').modal('hide');
+                                location.reload();
+                            } else {
+                                alert('Error al eliminar la reserva.');
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            alert('Error: ' + xhr.responseText);
+                        }
+                    });
+                }
+            });
 
         </script>
     </body>
