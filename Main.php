@@ -108,7 +108,7 @@ $conn->close();
     <body>
         <nav class="navbar justify-content-center">
             <h1 class="text-center my-4 pr-5">Reserva de la sala de reuniones</h1>
-            <img src="assets/logo2.png" alt="Central Uniformes" height="96" class="float-left">
+            <img src="assets/logo.png" alt="Central Uniformes" height="96" class="float-left">
             <h2 class="my-4"><span style="color:#94c564">Central</span><span style="color:#dc4021">Uniformes</span></h2>
         </nav>
         <div class="container">
