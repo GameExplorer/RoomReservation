@@ -276,27 +276,6 @@ $conn->close();
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script>
             $(document).ready(function () {
-                function updateCurrentTimeLine() {
-                    const now = new Date();
-                    const currentHour = now.getHours();
-                    const currentMinute = now.getMinutes();
-                    const totalMinutes = (currentHour - 8) * 60 + currentMinute; // Assuming calendar starts at 8:00
-
-                    const table = document.querySelector('.table');
-                    const hourCell = table.querySelector('td.hours');
-                    const cellHeight = hourCell ? hourCell.offsetHeight : 50; // Default to 50px if not found
-                    const topPosition = totalMinutes * (cellHeight / 60);
-
-                    const currentTimeLine = document.getElementById('current-time-line');
-                    currentTimeLine.style.top = `${topPosition}px`;
-                }
-
-                function initializeCurrentTimeLine() {
-                    updateCurrentTimeLine();
-                    setInterval(updateCurrentTimeLine, 60000); // Update every minute
-                }
-
-                document.addEventListener('DOMContentLoaded', initializeCurrentTimeLine);
                 // Add Booking Modal
                 $('#exampleModal').on('show.bs.modal', function (event) {
                     var button = $(event.relatedTarget);
