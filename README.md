@@ -6,7 +6,7 @@ Room Reservation for Central Uniformes.
 ### Key features
 - Calendar is displaying current active week from Monday to Friday
 - Users are able to book a room
-- Users can edit or delete the booking. *Note: when editing they can only change reservation from/to time to what is currently available on the selected date
+- Users can edit or delete the booking. *Note: when editing they can only change reservation from/to time to what is currently available on the selected date*
 - Users can only book rooms during available times
 - Users can move between the weeks
 
