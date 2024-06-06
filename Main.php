@@ -83,6 +83,8 @@ foreach ($bookings as $booking) {
     }
 }
 
+header("refresh: 30;");
+
 $stmt->close();
 $conn->close();
 ?>
