@@ -261,7 +261,7 @@ $conn->close();
                                 <label for="edit-endTime">Hora de finalización:</label>
                                 <select class="form-control" id="edit-endTime" name="endTime" required></select>
                             </div>
-                            <button type="submit" class="librobtn btn btn-success" style="margin-right: 45%;">Guardar
+                            <button type="submit" class="librobtn btn btn-success" style="margin-right: 35%;">Guardar
                                 cambios</button>
                             <button type="button" class="removebtn btn btn-danger"><i class="fa-solid fa-trash"
                                     id="deleteBookingButton"></i></button>
